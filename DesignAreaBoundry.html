@@ -1,0 +1,330 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>
+    Design area boundry
+  </title>
+  <link rel="icon" href="Images/EPADPLogo.png">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.23/"></script>
+
+  <style>
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/Legend",
+      "esri/layers/GeoJSONLayer",
+      "esri/widgets/Home",
+      "esri/smartMapping/renderers/color",
+      "esri/smartMapping/symbology/color",
+      "esri/smartMapping/symbology/support/colorRamps",
+      "esri/layers/GraphicsLayer",
+      "esri/smartMapping/statistics/summaryStatistics",
+      "esri/widgets/Expand",
+      "esri/widgets/Editor",
+      "esri/renderers/UniqueValueRenderer",
+      "esri/widgets/Bookmarks",
+      "esri/geometry/geometryEngine",
+      "esri/layers/support/FeatureFilter",
+      "esri/smartMapping/renderers/type",
+    ], (
+      Map,
+      MapView,
+      FeatureLayer,
+      Legend,
+      GeoJSONLayer,
+      Home,
+      colorRendererCreator,
+      colorSymbology,
+      colorRamps,
+      Graphic,
+      SummaryStatistics,
+      Expand,
+      Editor,
+      UniqueValueRenderer,
+      Bookmarks,
+      geometryEngine,
+      FeatureFilter,
+      typeRendererCreator,
+
+    ) => {
+
+      let editFeature, highlight;
+      let features =
+      [
+      {
+            url : 'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/3',
+            name: 'Polygons 5000'
+        },       
+        {
+            url : 'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/0',
+            name: 'Polygons'
+        },
+        {
+            url : 'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/1',
+            name: 'Lines 5000'
+        },
+        // {
+        //     url : 'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/6',
+        //     name: 'Grid lines'
+        // },
+        // {
+        //     url : 'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/18',
+        //     name: ' Field points'
+        // },
+        
+        {
+            url :'https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/قاعدة_بيانات_منطقة_gdb/FeatureServer/2',
+            name: 'Lines'
+        },
+      ]  
+
+      const projectsLyr = new FeatureLayer({
+        url: "https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/EPADPDemo/FeatureServer/0",
+        title: "Projects"
+      });
+ 
+    const createLayer = (layerInfo)=>{
+        return  new FeatureLayer({
+            url : layerInfo['url'],
+            title : layerInfo['name']
+        })
+      }
+
+      const layers = features.map((feature) => {
+          return createLayer(feature);
+        });
+        const map = new Map({
+            basemap: "satellite",
+            layers : layers
+        });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center : [30,30],
+        zoom : 3
+      });
+
+      view.when(() => {
+            layers[0].queryFeatures().then(function (results) {
+                view.goTo({
+                    center: [30.82, 31.15],
+                    zoom: 14,
+                }, { duration: 2500 });
+            });
+        })
+
+      const typeParams = {
+        layer: projectsLyr,
+        view: view,
+        field: "Type",
+        legendOptions: {
+          title: "Type"
+        }
+      };
+
+      typeRendererCreator
+        .createRenderer(typeParams)
+        .then((response) => {
+          response.renderer.uniqueValueInfos.map(each => {
+            each.symbol.color['a'] = 0.5;
+            each.symbol.outline = {
+              width: 0.5,
+              color: 'black'
+            }
+          })
+
+          response.renderer.defaultSymbol = null
+          projectsLyr.renderer = response.renderer;
+          if (!map.layers.includes(projectsLyr)) {
+            map.add(projectsLyr);
+          }
+        })
+        .catch((error) => {
+          console.error("there was an error: ", error);
+       });
+
+
+      const lyrInfos = {
+        layer: projectsLyr,
+        groupDisplay: "sequential",
+        formTemplate: {
+          title: "Project information",
+          elements: [
+            {
+              type: "group",
+              label: "Basic information",
+              elements: [
+                {
+                  type: "field",
+                  fieldName: "ArabicName",
+                  label: "Arabic Name"
+                },
+                {
+                  type: "field",
+                  fieldName: "EnglishName",
+                  label: "English Name"
+                },
+                {
+                  type: "field",
+                  fieldName: "Type",
+                  label: "Type"
+                },
+                {
+                  type: "field",
+                  fieldName: "Area",
+                  label: "Area"
+                }
+              ]
+            },
+            {
+              type: "group",
+              label: "Location data",
+              elements: [
+                {
+                  type: "field",
+                  fieldName: "Sector",
+                  label: "Sector"
+                },
+                {
+                  type: "field",
+                  fieldName: "Directorate",
+                  label: "Directorate"
+                },
+                {
+                  type: "field",
+                  fieldName: "Section",
+                  label: "Section"
+                },
+                {
+                  type: "field",
+                  fieldName: "Governorate",
+                  label: "Governorate"
+                }
+
+              ]
+            },
+            {
+              type: "group",
+              label: "Drains",
+              elements: [
+                {
+                  type: "field",
+                  fieldName: "DrainEnglishName",
+                  label: "Drain English Name"
+                },
+                {
+                  type: "field",
+                  fieldName: "DrainArabicName",
+                  label: "Drain Arabic Name"
+                }
+              ]
+            }
+          ]
+        }
+      };
+
+      const getLayerView = (layer) => {
+        return view
+          .whenLayerView(layer)
+      }
+
+      const excludeOutsideFeatures = (layer, geometry) => {
+        getLayerView(layer)
+          .then((returnedLayerView) => {
+            let layerView = returnedLayerView;
+            layerView.filter = new FeatureFilter({
+              spatialRelationship: "intersects",
+              geometry: geometry,
+            });
+          })
+      }
+
+      let legend = new Legend({
+        view: view,
+      })
+      let homeWidget = new Home({ view: view });
+      let bookmarks = new Bookmarks({
+        view: view,
+        editingEnabled: true,
+        visibleElements: {
+          time: false
+        }
+      });
+
+      const bkExpand = new Expand({
+        view: view,
+        content: bookmarks,
+        expandTooltip: "Expand bookmarks",
+        expanded: false
+      });
+
+
+      const legendExpand = new Expand({
+        view: view,
+        content: legend,
+        expandTooltip: "Expand legend",
+        expanded: false
+      });
+
+
+      const editor = new Editor({
+        view: view,
+        layerInfos: [lyrInfos],
+        allowedWorkflows: ["update", "create"],
+      });
+
+      editorExpand = new Expand({
+        expandIconClass: "esri-icon-edit \ue61b",
+        expandTooltip: "Expand editor",
+        view: view,
+        content: editor
+      });
+
+      view.ui.add(bkExpand, "top-right");
+      view.ui.add(editorExpand, "top-right");
+      view.ui.add(homeWidget, "top-left");
+      view.ui.add(legendExpand, "top-left");
+      view.ui.add('nextBtn', "bottom-left");
+
+
+      view.when(() => {
+        editor.messages['createFeatures'] = " ";
+        editor.messages['editFeatures'] = "Edit projects";
+        editor.messages['editFeature'] = "Edit project";
+        editor.messages['selectFeature'] = "select project";
+        editor.messages['selectFeatureToEdit'] = "Select a project to start editing"
+
+        document.getElementById("nextBtn").addEventListener("click" , ()=>{
+        window.location.href = "ElevationGrid.html";
+      })
+      })
+    });
+  </script>
+
+</head>
+
+<body>
+  <div id="viewDiv">
+    <div id="formDiv"></div>
+    <button id="nextBtn" class="esri-widget esri-button">Next</button>
+  </div>
+</body>
+
+</html>
