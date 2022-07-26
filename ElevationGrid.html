@@ -21,100 +21,101 @@
       width: 100%;
       flex: 1;
     }
+
     body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-      }
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
-      .esri-popup--is-docked-top-right .esri-popup__main-container {
-        max-height: 100%;
-      }
+    .esri-popup--is-docked-top-right .esri-popup__main-container {
+      max-height: 100%;
+    }
 
-      #appContainer {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-      }
+    #appContainer {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
 
-      .container {
-        display: flex;
-        flex: 1;
-        width: 100%;
-      }
+    .container {
+      display: flex;
+      flex: 1;
+      width: 100%;
+    }
 
-      .switch {
-        position: relative;
-        display: inline-block;
-        width: 45px;
-        height: 22px;
-        vertical-align: middle;
-      }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 45px;
+      height: 22px;
+      vertical-align: middle;
+    }
 
-      .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
 
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: 0.4s;
-        transition: 0.4s;
-      }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
 
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 20px;
-        width: 20px;
-        left: 3px;
-        bottom: 1px;
-        background-color: white;
-        -webkit-transition: 0.4s;
-        transition: 0.4s;
-      }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 1px;
+      background-color: white;
+      -webkit-transition: 0.4s;
+      transition: 0.4s;
+    }
 
-      input:checked + .slider {
-        background-color: #2196f3;
-      }
+    input:checked+.slider {
+      background-color: #2196f3;
+    }
 
-      input:focus + .slider {
-        box-shadow: 0 0 1px #2196f3;
-      }
+    input:focus+.slider {
+      box-shadow: 0 0 1px #2196f3;
+    }
 
-      input:checked + .slider:before {
-        -webkit-transform: translateX(20px);
-        -ms-transform: translateX(20px);
-        transform: translateX(20px);
-      }
+    input:checked+.slider:before {
+      -webkit-transform: translateX(20px);
+      -ms-transform: translateX(20px);
+      transform: translateX(20px);
+    }
 
-      /* Rounded sliders */
+    /* Rounded sliders */
 
-      .slider.round {
-        border-radius: 20px;
-      }
+    .slider.round {
+      border-radius: 20px;
+    }
 
-      .slider.round:before {
-        border-radius: 50%;
-      }
+    .slider.round:before {
+      border-radius: 50%;
+    }
 
-      .labelText {
-        padding-left: 5px;
-        font-size: 15px;
-      }
+    .labelText {
+      padding-left: 5px;
+      font-size: 15px;
+    }
 
-      #mainDiv {
-        padding: 8px;
-      }
+    #mainDiv {
+      padding: 8px;
+    }
   </style>
 
   <script>
@@ -128,7 +129,7 @@
       "esri/smartMapping/renderers/color",
       "esri/smartMapping/symbology/color",
       "esri/smartMapping/symbology/support/colorRamps",
-      "esri/layers/GraphicsLayer",
+      "esri/Graphic",
       "esri/smartMapping/statistics/summaryStatistics",
       "esri/widgets/Expand",
       "esri/widgets/Editor",
@@ -139,7 +140,6 @@
       "esri/smartMapping/renderers/type",
       "esri/widgets/FeatureTable",
       "esri/core/reactiveUtils",
-      "esri/Graphic",
     ], (
       Map,
       MapView,
@@ -161,9 +161,11 @@
       typeRendererCreator,
       FeatureTable,
       reactiveUtils,
-      Graphic,
 
     ) => {
+
+
+      let  geometry;
 
       const projectsLyr = new FeatureLayer({
         url: "https://services8.arcgis.com/QF1SFulWoGe9X2JG/arcgis/rest/services/EPADPDemo/FeatureServer/0",
@@ -228,7 +230,7 @@
           console.error("there was an error: ", error);
         });
 
-        const typeParams = {
+      const typeParams = {
         layer: projectsLyr,
         view: view,
         field: "Type",
@@ -258,8 +260,6 @@
           console.error("there was an error: ", error);
         });
 
-
-
       const getLayerView = (layer) => {
         return view
           .whenLayerView(layer)
@@ -275,19 +275,7 @@
             });
           })
       }
-
-      projectsLyr.queryFeatures().then(function (results) {
-        geometry = results.features[results.features.length - 1].geometry;
-      }).then(() => {
-
-        projectsLyr.queryFeatures().then(function (results) {
-          view.goTo(geometry, { duration: 2500 });
-        });
-
-        excludeOutsideFeatures(gridLines, geometry)
-        excludeOutsideFeatures(gridPoints, geometry)
-      })
-
+    
       let legend = new Legend({
         view: view,
       })
@@ -319,168 +307,167 @@
       view.ui.add(homeWidget, "top-left");
       view.ui.add(legendExpand, "top-left");
 
-      
-    view.when(()=>{
 
-        let features = []
-        let fields = [{
-                name: "ObjectID",
-                alias: "ObjectID",
-                type: "oid",
-            },
-            {
-                name: "AttackRate",
-                alias: "AttackRate",
-                type: "double",
-            },
-            {
-                name: "CFR",
-                alias: "CFR",
-                type: "double",
-            },
-            {
-                name: "RecoveryRate",
-                alias: "RecoveryRate",
-                type: "double",
-            },
-            {
-                name: "SampleTested",
-                alias: "SampleTested",
-                type: "double",
-            },
-            {
-                name: "Population",
-                alias: "Population",
-                type: "integer",
-            },
-            {
-                name: "Name",
-                alias: "Name",
-                type: "string",
-            },
-            {
-                name: "MortalityRate",
-                alias: "MortalityRate",
-                type: "double",
-            }]
+      view.when(() => {
 
-            features.push(
-                            new Graphic({
-                                geometry: feature.geometry,
-                                attributes: {
-                                    Name: feature.attributes.Name,
-                                    Population: feature.attributes.Population,
-                                    AttackRate: record.attributes.AttackRate,
-                                    CFR: record.attributes.CFR,
-                                    RecoveryRate: record.attributes.RecoveryRate,
-                                    SampleTested: record.attributes.SampleTested,
-                                    MortalityRate: record.attributes.MortalityRate,
-                                },
-                            })
-                        );  
-                        var foreGroundNewlyr = new FeatureLayer({
-                        source: featuresToBeAdded,
-                        objectIdField: "ObjectID_1",
-                        fields:  fields,
-                        
-                      });               
-        const featureLayer = gridPoints;
-        //   featureLayer.title = "US Private school enrollment";
-          featureLayer.outFields = ["*"];
 
-          // Get references to div elements for toggling table visibility
-          const appContainer = document.getElementById("appContainer");
-          const tableContainer = document.getElementById("tableContainer");
-          const tableDiv = document.getElementById("tableDiv");
+        let pointsFeatures = []
+        let pointsFields = [{
+          name: "ObjectID_1",
+          alias: "ObjectID",
+          type: "oid",
+        },
+        {
+          name: "elevation",
+          alias: "Elevation",
+          type: "double",
+        },
+        {
+          name: "name",
+          alias: "Name",
+          type: "string",
+        },
+        {
+          name: "WT",
+          alias: "WT",
+          type: "string",
+        },
+        {
+          name: "K",
+          alias: "K",
+          type: "string",
+        },
+        {
+          name: "L",
+          alias: "L",
+          type: "string",
+        },
+        {
+          name: "GWS",
+          alias: "GWS",
+          type: "string",
+        },
+        {
+          name: "Soil_Text",
+          alias: "Soil Text",
+          type: "string",
+        },
+        {
+          name: "Clay",
+          alias: "Clay",
+          type: "string",
+        },
+        {
+          name: "EC",
+          alias: "EC",
+          type: "string",
+        },
+        {
+          name: "sn",
+          alias: "sn",
+          type: "string",
+        },
+        {
+          name: "CaCO3",
+          alias: "CaCO3",
+          type: "string",
+        }
+        ]
 
-          // Create FeatureTable
-          const featureTable = new FeatureTable({
-            view: view, // make sure to pass in view in order for selection to work
-            layer: featureLayer,
-            tableTemplate: {
-              // autocasts to TableTemplate
-            //   columnTemplates: [
-            //     // takes an array of GroupColumnTemplate and FieldColumnTemplate
-            //     {
-            //       // autocasts to FieldColumnTemplate
-            //       type: "field",
-            //       fieldName: "state_name",
-            //       label: "State",
-            //       direction: "asc"
-            //     },
-            //     {
-            //       type: "field",
-            //       fieldName: "PercentagePrivate",
-            //       label: "Private school percentage"
-            //     },
-            //     {
-            //       type: "field",
-            //       fieldName: "PercentagePublic",
-            //       label: "Public school percentage"
-            //     }
-            //   ]
-            },
-            container: tableDiv
+        projectsLyr.queryFeatures().then(function (results) {
+          geometry = results.features[results.features.length - 1].geometry;
+        }).then(() => {
+
+          projectsLyr.queryFeatures().then(function (results) {
+            view.goTo(geometry, { duration: 2500 });
           });
 
-          view.ui.add(document.getElementById("mainDiv"), "top-right");
+          excludeOutsideFeatures(gridLines, geometry)
+          excludeOutsideFeatures(gridPoints, geometry)
 
-          const checkboxEle = document.getElementById("checkboxId");
-          const labelText = document.getElementById("labelText");
+        })
 
-          checkboxEle.onchange = () => {
-            toggleFeatureTable();
-          };
+        getLayerView(gridPoints)
+          .then((returnedLayerView) => {
 
-          function toggleFeatureTable() {
-            if (!checkboxEle.checked) {
-              appContainer.removeChild(tableContainer);
-              labelText.innerHTML = "Show elevation points table";
-            } else {
-              appContainer.appendChild(tableContainer);
-              labelText.innerHTML = "Hide elevation points table";
-            }
-          }
+            let query = gridPoints.createQuery();
+            query.geometry = geometry
+            query.spatialRelationship = "intersects";
+            query.returnGeometry = true;
+            query.outFields = ["*"];
 
-          featureTable.on("selection-change", (changes) => {
-            // If row is unselected in table, remove it from the features array
-            changes.removed.forEach((item) => {
-              const data = features.find((data) => {
-                return data.feature === item.feature;
-              });
-            });
+            gridPoints.queryFeatures(query)
+              .then(function (response) {
+                let newLyr;
+                let intersectsPoints = response.features
+                console.log(intersectsPoints)
+                intersectsPoints.forEach(point => {
+                  pointsFeatures.push(
+                    new Graphic({
+                      geometry: point.geometry,
+                      attributes:// point.attributes
+                      {
+                          elevation: point.attributes.elevation,
+                          name: point.attributes.name,
+                          // WT: point.attributes.WT,
+                          // K: point.attributes.K,
+                          // L: point.attributes.L,
+                          // GWS: point.attributes.GWS,
+                          // Soil_Text: point.attributes.Soil_Text,
+                          // Clay: point.attributes.Clay,
+                          // sn: point.attributes.sn,
+                          // EC: point.attributes.EC,
+                          // CaCO3: point.attributes.CaCO3,
+                      }
+                      ,
+                    })
+                  );
+                  newlyr = new FeatureLayer({
+                    source: pointsFeatures,
+                    objectIdField: "ObjectID_1",
+                    fields: pointsFields,
+                  });
+                })
 
-            // If a row is selected, add to the features array
-            changes.added.forEach((item) => {
-              const feature = item.feature;
-              features.push({
-                feature: feature
-              });
+                const appContainer = document.getElementById("appContainer");
+                const tableContainer = document.getElementById("tableContainer");
+                const tableDiv = document.getElementById("tableDiv");
 
-              // Listen for row selection in the feature table. If the popup is open and a row is selected that is not the same feature as opened popup, close the existing popup.
-              if (
-                feature.attributes.OBJECTID !== id &&
-                view.popup.visible === true
-              ) {
-                featureTable.deselectRows(selectedFeature);
-                view.popup.close();
-              }
-            });
+                let featureTable;
+                const checkboxEle = document.getElementById("checkboxId");
+                const labelText = document.getElementById("labelText");
+                view.ui.add(document.getElementById("mainDiv"), "top-right");
+
+                checkboxEle.onchange = () => {
+                    toggleFeatureTable();
+                  };
+                  setTimeout(()=>{
+                  featureTable = new FeatureTable({
+                  view: view, 
+                  layer: newlyr,
+                  tableTemplate: {
+                    
+                  },
+                  container: tableDiv
+                });
+                }, 5000)
+
+                document.getElementById("mainDiv").style.visibility = "visible"
+                
+                function toggleFeatureTable() {
+                  if (!checkboxEle.checked) {
+                    appContainer.removeChild(tableContainer);
+                    labelText.innerHTML = "Show elevation points table";
+                  } else {
+                    appContainer.appendChild(tableContainer);
+                    labelText.innerHTML = "Hide elevation points table";
+                  }
+                }
+              })
+
           });
 
-          // Watch for the popup's visible property. Once it is true, clear the current table selection and select the corresponding table row from the popup
-          reactiveUtils.watch(
-            () => view.popup.viewModel.active,
-            () => {
-              selectedFeature = view.popup.selectedFeature;
-              if (selectedFeature !== null && view.popup.visible !== false) {
-                featureTable.clearSelection();
-                featureTable.selectRows(view.popup.selectedFeature);
-                id = selectedFeature.getObjectId();
-              }
-            }
-          );
-    })
+      })
 
 
     });
@@ -489,18 +476,19 @@
 </head>
 
 <body>
-    <div id="appContainer">
-        <div id="viewDiv"></div>
-        <div id="tableContainer" class="container">
-          <div id="tableDiv"></div>
-        </div>
-        <div id="mainDiv" class="esri-widget">
-          <label class="switch">
-            <input id="checkboxId" type="checkbox" checked="yes" />
-            <span class="slider round"></span>
-          </label>
-          <label class="labelText" id="labelText">Hide elevation points table</label>
-        </div>
-      </div>
-    </body>
+  <div id="appContainer">
+    <div id="viewDiv"></div>
+    <div id="tableContainer" class="container">
+      <div id="tableDiv"></div>
+    </div>
+    <div style="visibility: hidden;" id="mainDiv" class="esri-widget">
+      <label class="switch">
+        <input id="checkboxId" type="checkbox" checked="yes" />
+        <span class="slider round"></span>
+      </label>
+      <label class="labelText" id="labelText">Hide elevation points table</label>
+    </div>
+  </div>
+</body>
+
 </html>

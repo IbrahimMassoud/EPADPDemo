@@ -301,7 +301,7 @@
       view.ui.add(editorExpand, "top-right");
       view.ui.add(homeWidget, "top-left");
       view.ui.add(legendExpand, "top-left");
-      view.ui.add('nextBtn', "bottom-left");
+      view.ui.add('nextBtn', "top-right");
 
 
       view.when(() => {
@@ -323,7 +323,11 @@
 <body>
   <div id="viewDiv">
     <div id="formDiv"></div>
-    <button id="nextBtn" class="esri-widget esri-button">Next</button>
+    <!-- <button id="nextBtn" class="esri-widget esri-button">Next</button> -->
+    <div style="padding: 8px;" class="esri-widget" id="nextBtn" >
+      <i class="esri-icon-right-arrow-circled \ue617"></i>
+    </div>
+
   </div>
 </body>
 
