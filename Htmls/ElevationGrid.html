@@ -392,7 +392,7 @@
 
             let query = gridPoints.createQuery();
             query.geometry = geometry
-            query.spatialRelationship = "intersects";
+            query.spatialRelationship = "contains";
             query.returnGeometry = true;
             query.outFields = ["*"];
 
